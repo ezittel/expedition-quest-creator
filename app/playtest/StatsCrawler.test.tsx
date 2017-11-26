@@ -246,4 +246,82 @@ describe('StatsCrawler', () => {
       expect(crawler.getLines().sort()).toEqual([2, 4, 6]);
     });
   });
+
+  describe('getTimeRangeMinutes', () => {
+    function getTimeRangeMinutesForCrawl(xml: Cheerio) {
+      const c = new StatsCrawler();
+      c.crawl(new Node(xml, defaultContext()));
+      return c.getTimeRangeMinutes();
+    }
+
+    it('treats combat nodes as lasting much longer than RP nodes', () => {
+      const rpxml = cheerio.load(`<quest><roleplay data-line="0"><p>Test roleplay card</p></roleplay></quest>`)('quest > :first-child');
+      const combatxml = cheerio.load(`<quest><combat data-line="0"></combat></quest>`)('quest > :first-child');
+
+      const rpTime = getTimeRangeMinutesForCrawl(rpxml);
+      const combatTime = getTimeRangeMinutesForCrawl(combatxml);
+      expect(combatTime[0]).toBeGreaterThan(rpTime[0]);
+      expect(combatTime[1]).toBeGreaterThan(rpTime[1]);
+    });
+
+    it('adds more time for longer roleplay nodes', () => {
+      const rpshort = cheerio.load(`<quest><roleplay data-line="0"><p>Test roleplay card</p></roleplay></quest>`)('quest > :first-child');
+      const rplong = cheerio.load(`<quest><roleplay data-line="0"><p>This is a test roleplay card with more loquacious verbiage.</p></roleplay></quest>`)('quest > :first-child');
+
+      const rpShortTime = getTimeRangeMinutesForCrawl(rpshort);
+      const rpLongTime = getTimeRangeMinutesForCrawl(rplong);
+      expect(rpLongTime[0]).toBeGreaterThan(rpShortTime[0]);
+      expect(rpLongTime[1]).toBeGreaterThan(rpShortTime[1]);
+    });
+
+    it('adds more time for more choices on a node', () => {
+      const rpfew = cheerio.load(`<quest>
+          <roleplay data-line="0"><p>Test</p>
+          <choice><roleplay data-line="1">a</roleplay></choice>
+        </roleplay></quest>`)('quest > :first-child');
+      const rpmany = cheerio.load(`<quest>
+        <roleplay data-line="0">
+          <p>Test</p>
+          <choice><roleplay data-line="1">a</roleplay></choice>
+          <choice><roleplay data-line="2">b</roleplay></choice>
+          <choice><roleplay data-line="3">c</roleplay></choice>
+          <choice><roleplay data-line="4">d</roleplay></choice>
+          <choice><roleplay data-line="5">e</roleplay></choice>
+        </roleplay></quest>`)('quest > :first-child');
+
+      const rpFewTime = getTimeRangeMinutesForCrawl(rpfew);
+      const rpManyTime = getTimeRangeMinutesForCrawl(rpmany);
+      expect(rpManyTime[0]).toBeGreaterThan(rpFewTime[0]);
+      expect(rpManyTime[1]).toBeGreaterThan(rpFewTime[1]);
+    });
+
+    it('adds a nonzero amount of time even for simplest nodes', () => {
+      const simple = cheerio.load(`<quest><roleplay data-line="0"></roleplay><roleplay data-line="1"></roleplay></quest>`)('quest > :first-child');
+      const simpleTime = getTimeRangeMinutesForCrawl(simple);
+      expect(simpleTime[0]).toBeGreaterThan(0);
+      expect(simpleTime[1]).toBeGreaterThan(0);
+    });
+
+    it('captures min and max time', () => {
+      const xml = cheerio.load(`<quest><roleplay data-line="0"><p>first node</p><choice><roleplay data-line="1"><p>Inner card</p></roleplay></choice></roleplay><trigger data-line="2">end</trigger></quest>`)('quest > :first-child');
+    });
+
+    fit('handles diverging/converging branches', () => {
+      const rpsplitjoin = cheerio.load(`<quest>
+        <roleplay data-line="0">
+          <p>Test</p>
+          <choice>
+            <roleplay data-line="1">a</roleplay>
+            <roleplay data-line="2">a</roleplay>
+            <roleplay data-line="3">a</roleplay>
+            <roleplay data-line="4">a</roleplay>
+            <roleplay data-line="5">a</roleplay>
+          </choice>
+        </roleplay>
+        <roleplay data-line="6">joined</roleplay></quest>`)('quest > :first-child');
+      const time = getTimeRangeMinutesForCrawl(rpsplitjoin);
+      expect(time[0]).toEqual(0.5);
+      expect(time[1]).toEqual(1.5);
+    })
+  });
 });

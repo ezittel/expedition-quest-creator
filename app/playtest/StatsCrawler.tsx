@@ -1,5 +1,11 @@
 import {CrawlerBase, CrawlEvent, CrawlEntry} from 'expedition-qdl/lib/parse/Crawler'
 import {Context} from 'expedition-qdl/lib/parse/Context'
+import {Node} from 'expedition-qdl/lib/parse/Node'
+
+function getWordCount(v: string): number {
+    var matches = v.match(/\S+/g) ;
+    return matches ? matches.length : 0;
+}
 
 export interface CrawlerStats {
   inputs: Set<string>;
@@ -15,6 +21,8 @@ export class StatsCrawler extends CrawlerBase<Context> {
   protected statsById: {[id:string]: CrawlerStats};
   protected statsByLine: {[line:number]: CrawlerStats};
   protected statsByEvent: {[event: string]: {lines: number[], ids: string[]}};
+  protected minDepth: number;
+  protected maxDepth: number;
 
   constructor() {
     super();
@@ -30,7 +38,11 @@ export class StatsCrawler extends CrawlerBase<Context> {
       'IMPLICIT_END': {lines: [], ids: []},
       'INVALID': {lines: [], ids: []},
       'END': {lines: [], ids: []},
+      'MAX_DEPTH_EXCEEDED': {lines: [], ids: []},
+      'ALREADY_SEEN': {lines: [], ids: []},
     };
+    this.minDepth = null;
+    this.maxDepth = null;
   }
 
   // Retrieves stats for a given node ID.
@@ -62,11 +74,48 @@ export class StatsCrawler extends CrawlerBase<Context> {
     return Object.keys(this.statsById).filter((k: string) => {return (k !== 'START');});
   }
 
+  public getTimeRangeMinutes(): [number, number] {
+    // TODO: Back-propagate and cache result
+    return [this.minDepth, this.maxDepth];
+  }
+
+  protected calculateAddedDepth(n: Node<Context>): number {
+    // Rules of thumb:
+    // - combat nodes take ~5 minutes at minimum, ~15 minutes at maximum.
+    // - "Audiobooks are recommended to be 150-160 words per minute..."
+    //   https://en.wikipedia.org/wiki/Words_per_minute#Speech_and_listening
+    // - Hick's Law describes time to make a choice as logarithmically related to the
+    //   number of choices.
+    //   https://en.wikipedia.org/wiki/Hick%27s_law
+
+    switch (n.getTag()) {
+      case 'combat':
+        return 10;
+      case 'roleplay':
+        let wordCount = 0;
+        n.loopChildren((tag: string, child: Cheerio)=> {
+          wordCount += getWordCount(child.text().trim());
+        });
+        console.log('Added depth: ' + (0.05 + (wordCount / 150) + 1.0 * Math.log(n.getVisibleKeys().length + 1)));
+        return 0.05 + (wordCount / 150) + 1.0 * Math.log(n.getVisibleKeys().length + 1);
+      default:
+        return 1;
+    }
+  }
+
   protected onEvent(q: StatsCrawlEntry, e: CrawlEvent) {
     this.statsById[q.prevId].outputs.add(e);
     this.statsByLine[q.prevLine].outputs.add(e);
     this.statsByEvent[e].lines.push(q.prevLine);
     this.statsByEvent[e].ids.push(q.prevId);
+
+    if (e === 'ALREADY_SEEN') {
+      console.log(e);
+    } else if (e === 'END' || e === 'IMPLICIT_END' || e === 'MAX_DEPTH_EXCEEDED') {
+      console.log(e);
+      this.minDepth = (this.minDepth === null) ? q.depth : Math.min(this.minDepth, q.depth);
+      this.maxDepth = (this.maxDepth === null) ? q.depth : Math.max(this.maxDepth, q.depth);
+    }
   }
 
   protected onNode(q: StatsCrawlEntry, nodeStr: string, id: string, line: number): void {
