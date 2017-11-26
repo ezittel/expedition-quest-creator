@@ -112,10 +112,7 @@ export class StatsCrawler extends CrawlerBase<Context> {
     this.statsByEvent[e].lines.push(q.prevLine);
     this.statsByEvent[e].ids.push(q.prevId);
 
-    if (e === 'ALREADY_SEEN') {
-      console.log(e);
-    } else if (e === 'END' || e === 'IMPLICIT_END' || e === 'MAX_DEPTH_EXCEEDED') {
-      console.log(e);
+    if (e === 'END' || e === 'IMPLICIT_END' || e === 'MAX_DEPTH_EXCEEDED') {
       this.minDepth = (this.minDepth === null) ? q.depth : Math.min(this.minDepth, q.depth);
       this.maxDepth = (this.maxDepth === null) ? q.depth : Math.max(this.maxDepth, q.depth);
     }

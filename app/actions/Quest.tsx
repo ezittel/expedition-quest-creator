@@ -177,28 +177,18 @@ export function loadQuest(user: UserState, dispatch: any, docid?: string) {
     console.log('Creating new quest');
     return dispatch(newQuest(user));
   }
-  console.log('Initializing quest load of document ' + docid);
   realtimeUtils.load(docid, function(doc: any) {
-    console.log('Got doc response');
-    console.log(doc);
     window.location.hash = docid;
     const md = doc.getModel().getRoot().get('markdown');
     let notes = doc.getModel().getRoot().get('notes');
     let metadata = doc.getModel().getRoot().get('metadata');
 
-    if (!md) {
-      console.error('No markdown section? Wat?');
-      return;
-    }
-
     if (!notes) { // Create notes if it's an old quest w/o notes attribute
-      console.log('Creating new notes section');
       notes = createDocNotes(doc.getModel());
     }
 
     if (!metadata) { // Create metadata if it's an old quest w/o metadata attribute
       // Default to any metadata set in the markdown metadata (migrate from the old format)
-      console.log('Creating new metadata section');
       try {
         const defaults = {
           ...METADATA_DEFAULTS,
@@ -221,17 +211,7 @@ export function loadQuest(user: UserState, dispatch: any, docid?: string) {
     }
 
     const text: string = md.getText();
-    console.log('Fetching metadata');
     getPublishedQuestMeta(docid, (quest: QuestType) => {
-      console.log('Metadata received');
-      console.log(quest);
-      if (!quest) {
-        console.log('NO quest meta; using defaults');
-      }
-
-      console.log('Rendering text:');
-      console.log(text);
-
       const xmlResult = renderXML(text);
       quest = Object.assign(quest || {}, {
         id: docid,

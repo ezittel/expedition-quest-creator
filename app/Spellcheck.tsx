@@ -3,14 +3,13 @@ const Typo: any = require('typo-js');
 const acequire: any = (require('brace') as any).acequire;
 const {Range} = acequire('ace/range');
 import {METADATA_FIELDS} from './Constants'
-import REGEX from './Regex'
+import REGEX, {combinedRegex} from 'expedition-qdl/lib/Regex'
 import {store} from './Store'
 import {setWordCount} from './actions/Editor'
 import {encounters} from '../node_modules/expedition-app/app/Encounters'
 const IGNORE = Object.keys(encounters);
-const elementRegexes = new RegExp('(' + [REGEX.HTML_TAG, REGEX.TRIGGER, REGEX.ID, REGEX.OP].map((regex: any): string => {
-  return regex.toString().match(REGEX.EXTRACT_REGEX)[1];
-}).join('|') + ')[^\s]*', 'gm');
+// TODO: Use regex.source instead of extracting regex via regex
+const elementRegexes = new RegExp('(' + combinedRegex([REGEX.HTML_TAG, REGEX.TRIGGER, REGEX.ID, REGEX.OP]).source + ')[^\s]*', 'gm');
 
 export default class Spellcheck {
   private contentsModified = true;
