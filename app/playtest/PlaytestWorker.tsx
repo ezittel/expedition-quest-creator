@@ -74,7 +74,6 @@ interface RunMessage {
 }
 
 function handleMessage(e: {data: RunMessage}) {
-
   try {
     const crawler = new PlaytestCrawler(null);
     const start = Date.now();
@@ -96,6 +95,7 @@ function handleMessage(e: {data: RunMessage}) {
       if (elapsed > timeout || !(queueLen > 0)) {
         console.log('Playtest (step: ' + step + ' queueLen: ' + queueLen + ', seen ' + numSeen + ')');
         console.log('Playtest COMPLETE (took ' + (Date.now() - start) + 'ms)');
+        (postMessage as any)({status: 'COMPLETE'});
         close();
         return;
       }
@@ -115,8 +115,9 @@ function handleMessage(e: {data: RunMessage}) {
       setTimeout(asyncTest, 0);
     };
     asyncTest();
-  } catch (e) {
-    console.error(e.toString());
+  } catch (err) {
+    console.error(err.toString());
+    (postMessage as any)({status: 'COMPLETE'});
   }
 }
 

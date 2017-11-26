@@ -14,6 +14,8 @@ $showcaseFeatureSize: 350px;
 $mapSize: 400px;
 $borderColor: #606060;
 $border: 1px $borderColor solid;
+$fontFamilyHeader: 'Cinzel', sans-serif;
+$fontFamilyBody: 'Minion-Pro', serif;
 $fontSizeBase: 20px;
 $fontSizeImportant: 28px;
 $fontSizeHeader: 45px;
@@ -79,7 +81,7 @@ body > :first-child:not(#react-app) { display: none; }
   margin-bottom: $padBase/2 !important;
   padding-top: $padBase !important;
   padding-bottom: $padBase/2 !important;
-  font-family: 'Cinzel' !important;
+  font-family: $fontFamilyHeader !important;
   font-weight: bold;
   font-size: 2em !important;
 
@@ -125,7 +127,7 @@ label {
   text-align: center;
   color: white;
   padding: $padBase;
-  font-family: 'Cinzel';
+  font-family: $fontFamilyHeader;
   font-weight: bold;
 }
 
@@ -150,7 +152,7 @@ body .olark-launch-button { /*must be more specifc than olark styles */
 
 .splash {
   background: $bg_primary;
-  font-family: 'Minion-Pro';
+  font-family: $fontFamilyBody;
   overflow-y: auto;
   font-size: $splashParagraphSize;
 
@@ -188,7 +190,7 @@ body .olark-launch-button { /*must be more specifc than olark styles */
       display: inline-block;
       padding: $padBase;
       &> button {
-        font-family: 'Minion-Pro', serif !important;
+        font-family: $fontFamilyBody !important;
         font-size: $fontSizeBase !important;
         padding-left: 2*$padBase !important;
         padding-right: 2*$padBase !important;
@@ -210,7 +212,7 @@ body .olark-launch-button { /*must be more specifc than olark styles */
       margin-bottom: $padBase;
     }
 
-    h1, h3 {
+    h1, h3, h4 {
       font-style: normal;
       font-weight: normal;
       letter-spacing: .05em;
@@ -223,13 +225,17 @@ body .olark-launch-button { /*must be more specifc than olark styles */
     }
 
     h1 {
-      font-family: 'Cinzel';
+      font-family: $fontFamilyHeader;
       font-size: $fontSizeHeader !important;
     }
 
     h3 {
       font-size: $fontSizeImportant;
-      font-family: 'Minion-Pro', serif !important;
+      font-family: $fontFamilyBody !important;
+    }
+
+    h4 {
+      font-family: $fontFamilyHeader;
     }
 
     &>* {
@@ -261,6 +267,13 @@ body .olark-launch-button { /*must be more specifc than olark styles */
       display:block;
       margin: 0;
     }
+  }
+
+  footer {
+    color: $grey600;
+    font-size: $fontSizeSmall;
+    margin-top: $fontSizeHeader;
+    margin-bottom: $fontSizeHeader;
   }
 
   .showcase {
@@ -312,7 +325,7 @@ body .olark-launch-button { /*must be more specifc than olark styles */
   }
 }
 
-.quest_app_bar {
+.splash_app_bar, .quest_app_bar {
   background-image: $bg_encounter_img;
 
   >div {
@@ -321,7 +334,7 @@ body .olark-launch-button { /*must be more specifc than olark styles */
   }
 
   h1 {
-    font-family: 'Cinzel';
+    font-family: $fontFamilyHeader;
     font-weight: 700 !important;
     font-size: 22px !important;
     height: $hBarThickness !important;
@@ -330,19 +343,22 @@ body .olark-launch-button { /*must be more specifc than olark styles */
     margin-left: -8px !important;
   }
 
-  .appBarRight {
+  .email {
     opacity: 0.8;
-    .email {
-      font-size: $fontSizeSmall;
-      vertical-align: super;
-    }
-    .loginState {
-      margin-top: -8px; // Override
-      margin-right: -8px;
-      button {
-        height: $hBarThickness;
-        width: $hBarThickness;
-      }
+    font-size: $fontSizeSmall;
+  }
+}
+
+.quest_app_bar {
+  .email {
+    vertical-align: super;
+  }
+  .loginState {
+    margin-top: -8px; // Override
+    margin-right: -8px;
+    button {
+      height: $hBarThickness;
+      width: $hBarThickness;
     }
   }
 
@@ -379,13 +395,14 @@ body .olark-launch-button { /*must be more specifc than olark styles */
   .preview {
     flex: 0 0 $previewPanelWidth;
     max-width: $previewPanelWidth;
+    overflow: hidden;
 
     .app_root, .editor_override {
       height: 100%;
     }
 
     .app, button {
-      font-family: 'Minion-Pro', sans-serif !important;
+      font-family: $fontFamilyBody !important;
     }
   }
 }
@@ -541,11 +558,24 @@ body .olark-launch-button { /*must be more specifc than olark styles */
   border-radius: 0;
 }
 .ace_gutter-cell.misspelled {
-  background: rgba(255, 0, 0, 0.3);
+  background-color: rgba(255, 0, 0, 0.3);
 }
 .ace_error, .ace_warning, .ace_info {
   &:hover {
     cursor: pointer;
+  }
+}
+.ace.noLineNumbers {
+  .ace_gutter, .ace_gutter-layer {
+    width: 34px !important;
+    margin-right: 6px !important;
+  }
+  .ace_gutter-cell {
+    font-size: 0 !important;
+    width: 0 !important;
+  }
+  .ace_fold-widget {
+    width: 14px !important;
   }
 }
 
@@ -566,7 +596,7 @@ body .olark-launch-button { /*must be more specifc than olark styles */
       width: 100%;
     }
     .body {
-      h1, h2, h3, p {
+      h1, h2, h3, h4, p {
         padding-left: $padBase;
         padding-right: $padBase;
         line-height: 1.16;
@@ -575,7 +605,7 @@ body .olark-launch-button { /*must be more specifc than olark styles */
         font-size: $fontSizeHeader !important;
         margin: $padBase;
       }
-      h2, h3 {
+      h2, h3, h4 {
         font-size: $fontSizeImportant !important;
       }
     }
@@ -602,7 +632,7 @@ body .olark-launch-button { /*must be more specifc than olark styles */
         font-size: $fontSizeHeader !important;
         margin: 0 0 $padBase 0;
       }
-      h2, h3 {
+      h2, h3, h4 {
         font-size: $fontSizeImportant !important;
       }
     }
@@ -616,7 +646,7 @@ body .olark-launch-button { /*must be more specifc than olark styles */
       }
     }
   }
-  h1, h2, h3, p, ul {
+  h1, h2, h3, h4, p, ul {
     text-align: center !important;
   }
   ul {

@@ -35,6 +35,8 @@ interface TextViewProps extends React.Props<any> {
   // Hook for external control of scroll position
   scrollLineTarget?: number;
   scrollLineTargetTs?: number;
+
+  showLineNumbers?: boolean;
 }
 
 // This class wraps the Realtime API undo commands in a way
@@ -93,6 +95,7 @@ class RealtimeUndoManager {
 // See https://github.com/securingsincity/react-ace
 export default class TextView extends React.Component<TextViewProps, {}> {
   ace: any;
+  focused: boolean;
   lineChangeTs: number;
   spellchecker: any;
   onSelectionChange: () => any;
@@ -161,7 +164,6 @@ export default class TextView extends React.Component<TextViewProps, {}> {
       ref.editor.setOption('wrapBehavioursEnabled', true);
       ref.editor.setOption('wrap', true);
       ref.editor.setOption('useSoftTabs', true);
-      ref.editor.renderer.setOption('showLineNumbers', false);
 
       ref.editor.on('changeSelection', this.onSelectionChange);
       ref.editor.on('gutterclick', (e: any) => {this.onGutterClick(e)});
@@ -252,7 +254,7 @@ export default class TextView extends React.Component<TextViewProps, {}> {
     // If we've been supplied with a different line number, scroll to it
     if (this.ace) {
       const row = this.ace.editor.getSelection().anchor.row;
-      if (newProps.scrollLineTarget !== row && newProps.scrollLineTargetTs > (this.lineChangeTs || 0)) {
+      if (!this.focused && newProps.scrollLineTarget !== row && newProps.scrollLineTargetTs > (this.lineChangeTs || -1)) {
         this.ace.editor.gotoLine(newProps.scrollLineTarget+1, 0, true);
         this.lineChangeTs = newProps.scrollLineTargetTs;
       }
@@ -281,11 +283,14 @@ export default class TextView extends React.Component<TextViewProps, {}> {
 
     return (
       <AceEditor
+        className={'ace ' + (!this.props.showLineNumbers && 'noLineNumbers')}
         ref={this.onRef.bind(this)}
         mode="markdown"
         theme="twilight"
         fontSize={20}
+        onBlur={() => this.focused = false}
         onChange={(text: string) => this.onChange(text)}
+        onFocus={() => this.focused = true}
         width="100%"
         height="100%"
         name={'editor'}

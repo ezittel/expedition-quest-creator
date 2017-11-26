@@ -1,8 +1,9 @@
 import * as React from 'react'
 import {render} from 'react-dom'
 import {Provider} from 'react-redux'
+import {renderAndPlay} from './actions/Editor'
 import {loginUser, setProfileMeta} from './actions/User'
-import {saveQuest} from './actions/Quest'
+import {saveQuest, questLoading} from './actions/Quest'
 import {setSnackbar} from './actions/Snackbar'
 import MainContainer from './components/MainContainer'
 import {store} from './Store'
@@ -38,14 +39,13 @@ injectTapEventPlugin();
 const ReactGA = require('react-ga') as any;
 ReactGA.initialize('UA-47408800-7');
 
-let isQuest = false;
+let questId: string = null;
 if (!window.location.hash && window.location.search.indexOf('ids') !== -1) {
   // Try to parse from google drive menu action, e.g.
   // ?state=%7B"ids":%5B"0BzrQOdaJcH9MeDhic2ctdFNSdjg"%5D,"action":"open","userId":"106667818352266772866"%7D
   try {
-    let doc_json = JSON.parse(unescape(window.location.search).match(/\?state=(.*)/)[1]);
-    window.location.href = '/#' + doc_json.ids[0];
-    isQuest = true;
+    questId = JSON.parse(unescape(window.location.search).match(/\?state=(.*)/)[1]).ids[0];
+    window.location.href = '/#' + questId;
   } catch (e) {
     ReactGA.event({
       category: 'Error',
@@ -54,17 +54,23 @@ if (!window.location.hash && window.location.search.indexOf('ids') !== -1) {
     });
     console.log('Failed to parse anticipated Drive open URI: ' + window.location.search);
   }
-}
-if (window.location.hash || window.location.href.endsWith('#')) {
-  isQuest = true;
+} else if (window.location.hash || window.location.href.endsWith('#')) {
+  questId = window.location.hash.slice(1);
 }
 
-if (isQuest) {
+if (questId) {
+  store.dispatch(questLoading());
   ReactGA.pageview('/quest');
 } else {
-  store.dispatch(setProfileMeta({loggedIn: false}));
   ReactGA.pageview('/');
 }
+
+// Try silently logging in
+// 10/10/2017: Also avoids popup blockers by making future login attempts
+// Trigger directly from the user action, rather than needing to load files
+window.gapi.load('client,drive-realtime,drive-share', () => {
+  store.dispatch(loginUser(false, questId));
+});
 
 // alert user if they try to close the page with unsaved changes
 window.onbeforeunload = function () {
@@ -75,16 +81,21 @@ window.onbeforeunload = function () {
 }
 
 // Ctrl + <hotkey>
-window.addEventListener('keydown', function checkForCtrlS (event: any) {
+window.addEventListener('keydown', (event: any) => {
   if (event.ctrlKey || event.metaKey) {
+    const state = store.getState();
     switch (String.fromCharCode(event.which).toLowerCase()) {
       case 's': // ctrl + s to save
         event.preventDefault();
-        const state = store.getState();
         if (state.editor.dirty) {
           store.dispatch(saveQuest(state.quest));
         }
         break;
+      case '\n':
+      case '\r':
+        if (state.quest.mdRealtime) {
+          store.dispatch(renderAndPlay(state.quest.mdRealtime.getText(), state.editor.line.number, state.editor.worker));
+        }
       default:
         // Do nothing
         break;
@@ -97,13 +108,14 @@ window.FirebasePlugin = {
   logEvent: console.log,
 };
 
-window.gapi.load('client,drive-realtime,drive-share', () => {
-  window.gapi.client.load('drive', 'v2', () => {
-    if (isQuest) {
-      store.dispatch(loginUser(false));
-    }
+window.onOlarkLoad = () => {
+  window.olark('api.chat.onBeginConversation', () => {
+    // Invisible to user
+    window.olark('api.chat.sendNotificationToOperator', {
+      body: 'Quest name: ' + store.getState().quest.title,
+    });
   });
-});
+};
 
 (() => {
   // load spellcheck dictionary asynchronously after waiting 1s for rest of the page to load
@@ -141,6 +153,26 @@ window.gapi.load('client,drive-realtime,drive-share', () => {
       },
     });
   }, 12 * 60 * 60 * 1000);
+
+  // Alert user if cookies disabled
+  // Based on https://github.com/Modernizr/Modernizr/blob/master/feature-detects/cookies.js
+  try {
+    document.cookie = 'cookietest=1';
+    const ret = document.cookie.indexOf('cookietest=') !== -1;
+    document.cookie = 'cookietest=1; expires=Thu, 01-Jan-1970 00:00:01 GMT';
+    if (!ret) {
+      throw new Error('Cookies disabled');
+    }
+  } catch (err) {
+    setTimeout(() => {
+      store.dispatch(setSnackbar(true,
+        'Please enable cookies for the Quest Creator to function properly.',
+        (event: any) => { store.dispatch(setSnackbar(false)); },
+        'X',
+        true
+      ));
+  }, 0);
+  }
 })();
 
 // Pass credentials to API server despite cross-origin

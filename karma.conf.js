@@ -14,7 +14,7 @@ module.exports = function (config) {
       'node_modules/babel-polyfill/dist/polyfill.js',
       'node_modules/phantomjs-polyfill-object-assign/object-assign-polyfill.js',
       { pattern: 'app/**/*.test.tsx' },
-      'errors/errors.text.tsx',
+      'errors/errors.test.tsx',
     ],
     preprocessors: {
       '**/*.test.tsx': ['webpack'],
@@ -46,6 +46,7 @@ module.exports = function (config) {
     autoWatch: true,
     browsers: ['PhantomJS'],
     singleRun: false,
-    concurrency: Infinity
-  })
-}
+    concurrency: Infinity,
+    captureConsole: true,
+  });
+};

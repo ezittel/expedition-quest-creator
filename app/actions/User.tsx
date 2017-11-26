@@ -2,6 +2,7 @@ import Redux from 'redux'
 
 import {API_HOST} from '../Constants'
 import {SetProfileMetaAction} from './ActionTypes'
+import {setSnackbar} from './Snackbar'
 import {UserState} from '../reducers/StateTypes'
 import {loadQuestFromURL} from './Quest'
 import {realtimeUtils} from '../Auth'
@@ -13,9 +14,9 @@ export function setProfileMeta(user: UserState): SetProfileMetaAction {
   return {type: 'SET_PROFILE_META', user};
 }
 
-export function loginUser(showPrompt: boolean): ((dispatch: Redux.Dispatch<any>)=>void) {
+export function loginUser(showPrompt: boolean, quest?: boolean | string): ((dispatch: Redux.Dispatch<any>)=>void) {
   return (dispatch: Redux.Dispatch<any>) => {
-    realtimeUtils.authorize(function(response:any){
+    realtimeUtils.authorize((response:any) => {
       if (response.error){
         dispatch(setProfileMeta({loggedIn: false}));
       } else {
@@ -30,17 +31,27 @@ export function loginUser(showPrompt: boolean): ((dispatch: Redux.Dispatch<any>)
               image: res.image.url,
               email: ((res.emails || [])[0] || {}).value,
             };
-            $.post(API_HOST + '/auth/google', JSON.stringify(googleUser), (data) => {
-              const user = {
-                loggedIn: true,
-                id: data,
-                displayName: googleUser.name,
-                image: googleUser.image,
-                email: googleUser.email,
-              };
-              dispatch(setProfileMeta(user));
-              loadQuestFromURL(user, dispatch);
-            });
+            $.post(API_HOST + '/auth/google', JSON.stringify(googleUser))
+                .done((data: any) => {
+                  const user = {
+                    loggedIn: true,
+                    id: data,
+                    displayName: googleUser.name,
+                    image: googleUser.image,
+                    email: googleUser.email,
+                  };
+                  dispatch(setProfileMeta(user));
+                  if (quest) {
+                    if (quest === true) { // create a new quest
+                      dispatch(loadQuestFromURL(user, null));
+                    } else if (typeof quest === 'string') {
+                      dispatch(loadQuestFromURL(user, quest));
+                    }
+                  }
+                })
+                .fail((xhr: any, status: string) => {
+                  dispatch(setSnackbar(true, 'Login error ' + status + ' - please report via Contact Us button!'));
+                });
           });
         });
       }

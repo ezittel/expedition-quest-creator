@@ -19,7 +19,7 @@ const ReactGA = require('react-ga') as any;
 const mapStateToProps = (state: AppState, ownProps: any): QuestAppBarStateProps => {
   var scope = (state.preview.quest && state.preview.quest.node && state.preview.quest.node.ctx && state.preview.quest.node.ctx.scope) || {};
   return {
-    annotations: state.annotations,
+    annotations: [...state.annotations.spellcheck, ...state.annotations.playtest],
     editor: state.editor,
     quest: state.quest,
     user: state.user,
@@ -75,7 +75,7 @@ const mapDispatchToProps = (dispatch: Redux.Dispatch<any>, ownProps: any): Quest
         // TODO: Display eval errors
         console.log(e);
       }
-      dispatch(renderAndPlay(quest.mdRealtime.getText(), editor.line.number, ctx, editor.worker));
+      dispatch(renderAndPlay(quest.mdRealtime.getText(), editor.line.number, editor.worker, ctx));
     },
   };
 }

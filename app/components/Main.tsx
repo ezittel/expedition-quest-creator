@@ -10,8 +10,9 @@ import QuestAppBarContainer from './QuestAppBarContainer'
 import QuestIDEContainer from './QuestIDEContainer'
 import ContextEditorContainer from './ContextEditorContainer'
 import NotesPanelContainer from './NotesPanelContainer'
-import {EditorState, PanelType, SnackbarState} from '../reducers/StateTypes'
+import {EditorState, PanelType, SnackbarState, QuestType} from '../reducers/StateTypes'
 
+const numeral = require('numeral') as any;
 const SplitPane = require('react-split-pane') as any;
 
 export interface MainStateProps {
@@ -19,10 +20,12 @@ export interface MainStateProps {
   loggedIn: boolean;
   bottomPanel: PanelType;
   snackbar: SnackbarState;
+  quest: QuestType;
 };
 
 export interface MainDispatchProps {
   onDragFinished: (size: number) => void;
+  onLineNumbersToggle: () => void;
   onPanelToggle: (panel: PanelType) => void;
   onSnackbarClose: () => void;
 }
@@ -30,13 +33,13 @@ export interface MainDispatchProps {
 interface MainProps extends MainStateProps, MainDispatchProps {}
 
 const Main = (props: MainProps): JSX.Element => {
-  if (props.loggedIn === null || props.loggedIn === undefined) {
+  if (props.editor.loadingQuest) {
     return (
       <div className="main loading">
         Loading Expedition Quest Creator...
       </div>
     );
-  } else if (props.loggedIn !== true) {
+  } else if (props.loggedIn === false || Object.keys(props.quest).length === 0) {
     return (
       <SplashContainer/>
     );
@@ -56,13 +59,13 @@ const Main = (props: MainProps): JSX.Element => {
       />
       <div className="bottomPanel--right">
         <FlatButton
-          label={`Line: ${props.editor.line.number}`}
-          disabled={true}
+          label={`Line: ${numeral(props.editor.line.number).format('0,0')}`}
+          onTouchTap={(event: any) => {props.onLineNumbersToggle();}}
         />
-        {props.editor.wordCount > 0 && <FlatButton
-          label={`Words: ${props.editor.wordCount}`}
+        <FlatButton
           disabled={true}
-        />}
+          label={`Words: ${props.editor.wordCount > 0 ? numeral(props.editor.wordCount).format('0,0') : '-'}`}
+        />
       </div>
     </div>
   );

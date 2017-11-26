@@ -3,6 +3,7 @@ import {PanelToggleAction, SetDirtyAction, SetDirtyTimeoutAction, SetLineAction,
 import {EditorState, PanelType} from './StateTypes'
 
 const defaultState: EditorState = {
+  loadingQuest: false,
   renderer: null,
   dirty: false,
   dirtyTimeout: null,
@@ -14,6 +15,7 @@ const defaultState: EditorState = {
   opInit: '',
   lastSplitPaneDragMillis: 0,
   bottomPanel: null,
+  showLineNumbers: false,
   worker: null,
   wordCount: 0,
 };
@@ -31,6 +33,10 @@ export function editor(state: EditorState = defaultState, action: Redux.Action):
         number: (action as SetLineAction).line,
         ts: Date.now(),
       }};
+    case 'RECEIVE_QUEST_LOAD':
+      return {...state, loadingQuest: false};
+    case 'QUEST_LOADING':
+      return {...state, loadingQuest: true};
     case 'SET_WORD_COUNT':
       return {...state, wordCount: (action as SetWordCountAction).count};
     case 'QUEST_RENDER':
@@ -53,6 +59,10 @@ export function editor(state: EditorState = defaultState, action: Redux.Action):
       return {...state, bottomPanel: (state.bottomPanel !== panel) ? panel : null};
     case 'PLAYTEST_INIT':
       return {...state, worker: (action as PlaytestInitAction).worker};
+    case 'PLAYTEST_COMPLETE':
+      return {...state, worker: null};
+    case 'LINE_NUMBERS_TOGGLE':
+      return {...state, showLineNumbers: !state.showLineNumbers};
     default:
       return state;
   }

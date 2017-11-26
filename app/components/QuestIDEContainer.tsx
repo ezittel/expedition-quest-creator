@@ -8,12 +8,13 @@ import {setDialog} from '../actions/Dialogs'
 
 const mapStateToProps = (state: AppState, ownProps: any): QuestIDEStateProps => {
   return {
-    annotations: state.annotations,
+    annotations: [...state.annotations.spellcheck, ...state.annotations.playtest],
     lastSplitPaneDragMillis: state.editor.lastSplitPaneDragMillis,
     line: state.editor.line.number,
     lineTs: state.editor.line.ts,
     realtime: state.quest.mdRealtime,
     realtimeModel: state.quest.realtimeModel,
+    showLineNumbers: state.editor.showLineNumbers,
   };
 }
 

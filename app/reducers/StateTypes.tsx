@@ -16,6 +16,11 @@ export interface AnnotationType {
   type: 'warning' | 'error' | 'info' | 'internal';
 }
 
+export interface AnnotationsState {
+  spellcheck: AnnotationType[];
+  playtest: AnnotationType[];
+}
+
 export interface XMLElement {
   remove(): void;
   children: XMLElement[];
@@ -77,6 +82,8 @@ export interface EditorState {
   opInit: string; // Initial mathjs to run when loading a quest
   lastSplitPaneDragMillis: number; // Informs re-rendering of text editor
   bottomPanel: PanelType;
+  loadingQuest: boolean;
+  showLineNumbers: boolean;
   wordCount: number;
   worker: Worker;
 }
@@ -110,7 +117,7 @@ export interface UserState {
 }
 
 export interface AppState {
-  annotations: AnnotationType[];
+  annotations: AnnotationsState;
   dialogs: DialogsState;
   editor: EditorState;
   quest: QuestType;

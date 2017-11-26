@@ -5,7 +5,7 @@ import {store} from '../Store'
 import {saveQuest} from './Quest'
 import {renderXML} from 'expedition-qdl/lib/render/QDLParser'
 import {initQuest, loadNode} from 'expedition-app/app/actions/Quest'
-import {ParserNode} from 'expedition-app/app/cardtemplates/Template'
+import {defaultContext, ParserNode} from 'expedition-app/app/cardtemplates/Template'
 import {TemplateContext} from 'expedition-app/app/cardtemplates/TemplateTypes'
 import {pushError} from './Dialogs'
 
@@ -31,6 +31,10 @@ export function setWordCount(count: number): SetWordCountAction {
 
 export function panelToggle(panel: PanelType) {
   return {type: 'PANEL_TOGGLE', panel};
+}
+
+export function lineNumbersToggle() {
+  return {type: 'LINE_NUMBERS_TOGGLE'};
 }
 
 export function updateDirtyState(): ((dispatch: Redux.Dispatch<any>)=>any) {
@@ -90,14 +94,18 @@ export function startPlaytestWorker(oldWorker: Worker, elem: Cheerio) {
       worker.terminate();
     };
     worker.onmessage = (e: MessageEvent) => {
-      dispatch({type: 'PLAYTEST_MESSAGE', msgs: e.data});
+      if (e.data.status === 'COMPLETE') {
+        dispatch({type: 'PLAYTEST_COMPLETE'});
+      } else {
+        dispatch({type: 'PLAYTEST_MESSAGE', msgs: e.data});
+      }
     };
     worker.postMessage({type: 'RUN', xml: elem.toString()});
     dispatch({type: 'PLAYTEST_INIT', worker});
   }
 }
 
-export function renderAndPlay(qdl: string, line: number, ctx: TemplateContext, oldWorker: Worker) {
+export function renderAndPlay(qdl: string, line: number, oldWorker: Worker, ctx: TemplateContext = defaultContext()) {
   return (dispatch: Redux.Dispatch<any>): any => {
     // Do rendering after timeout to stay outside the event handler.
     setTimeout(() => {

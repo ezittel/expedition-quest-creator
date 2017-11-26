@@ -35,8 +35,8 @@ Attributes can be added to specific cards and elements to give you additional ca
 For **cards**, you can add an ID that can be jumped to from anywhere else in the quest via **goto elements**. Note: **IDs must be unique across the entire quest**. ID's should be written in camelCase and only use alphanumeric characters. This looks like:
 
 ```
-_roleplay title (#id)_
-_combat (#longCardId)_
+_roleplay title_ (#id)
+_combat_ (#longCardId)
 ```
 
 IDs allow you to reference that specific card in other places in the quest. You can use a GOTO statement to jump to that card:
@@ -56,13 +56,13 @@ You can also see how many times the user has viewed that specific card:
 This can be very powerful - for example, if you wanted to create a conversation where the user could only ask each question once, you could do something like:
 
 ```
-_Conversation loop (#conversation)_
+_Conversation loop_ (#conversation)
 
 You prepare to ask John a question...
 
 * {{_.viewCount("question1") == 0}} Question 1
 
-  _Question 1 (#question1)_
+  _Question 1_ (#question1)
 
   His answer
 
@@ -70,7 +70,7 @@ You prepare to ask John a question...
 
 * {{_.viewCount("question2") == 0}} Question 2
 
-  _Question 2 (#question2)_
+  _Question 2_ (#question2)
 
   His answer
 
@@ -181,6 +181,8 @@ _combat_
 Allowable enemy names are the enemies in the Expedition deck - you can look through your copy of the game, or reference the [master spreadsheet](https://docs.google.com/spreadsheets/d/1WvRrQUBRSZS6teOcbnCjAqDr-ubUNIxgiVwWGDcsZYM/edit#gid=1555320979) to see all of your options.
 
 Note that at least one enemy, exactly one valid `on win` and one valid `on lose` are required.
+
+You can specify custom enemies with the following syntax: `- Custom Enemy Name {"tier": 3}`. If you do this, players will be instructed to draw a random enemy of that tier and use its health and abilities.
 
 `on round` is an optional event that can spice up combat by injecting roleplay cards into specific rounds of combat. For instance, you can add a roleplay card to a boss battle to check if a certain enemy is dead:
 
@@ -388,9 +390,11 @@ As covered in the **branching** section, you can include choice elements inside 
 
 ### Icons
 
-You can embed inline icons to make your quest more visually interesting! Simply add `:icon_name:` to roleplaying text, instructions or choices.
+You can embed inline icons to make your quest more visually interesting! Simply add `:icon_name:` to roleplaying text, instructions or choices. You can also use icons as the background watermark on a page via `_Card title_ {"icon":"adventurer"}`, though we recommend using watermarks on less than a quarter of your cards, so that when the watermark does appear, players know it's emphasizing something.
 
-Visit the [icon help page](icons.md) to learn more and see what icons are available.
+We recommend using icons as unique symbols, not as a replacement for words. (i.e. DON'T: use the d20 icon instead of the word die, such as in `> Roll a die`. DO: use the bandit icon to show what the thief's tatoo looks like). You can also replace the default instruction icon to make it clearer what the instruction is about; for example `> :loot: Draw one tier II loot` or `> :roll: Roll a die to try to sneak past the guards`.
+
+[Here's the list of available icons](https://github.com/expeditionrpg/expedition-art#icons)
 
 ### Instructions
 
@@ -400,6 +404,10 @@ You can also display helpful instructional callouts in the card via **instructio
 > Draw one tier 1 loot
 > {{ onFire == true }} Reduce all adventurers' health by 1
 ```
+
+### Art
+
+You can embed large images in cards for visually important things, such as showing off a symbol found on a lock. Simply add `[art_name]` to a roleplaying card's contents. By default, art takes up 50% of the width of the card, reducing the amount players need to scroll. If it's important for the art to take up the full width of the card, you can append `_full` to the end, such as `[art_name_full]`. You can use any icon listed in the **Icons** section. You can also use [the art files listed here](https://github.com/ExpeditionRPG/expedition-art/tree/master/art) - note that because those files are PNG extension, you'll need to add `_png` after the file name and before `_full`, for example `[darker_at_dawn_png_full]`
 
 ### Context
 
@@ -435,7 +443,7 @@ The user sees this card, with one button.
 
   **goto another**
 
-_Another card (#another)_
+_Another card_ (#another)
 
 After clicking "Jump me!", the app will immediately proceed to this card.
 ```
@@ -453,7 +461,7 @@ The user sees this card, with one button.
 
   **goto another**
 
-_Another card (#another)_
+_Another card_ (#another)
 
 After clicking "Jump me!", the app will immediately proceed to this card.
 ```

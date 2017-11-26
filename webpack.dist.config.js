@@ -10,9 +10,9 @@ const options = {
       './app/Style.scss',
       './node_modules/expedition-app/app/Style.scss',
     ],
-    // playtest: [
-    //   './app/playtest/PlaytestWorker.tsx',
-    // ],
+    playtest: [
+      './app/playtest/PlaytestWorker.tsx',
+    ],
   },
   resolve: {
     extensions: ['.js', '.ts', '.tsx', '.json', '.txt'],
@@ -49,6 +49,8 @@ const options = {
       { from: 'app/index.html', to: 'dist' },
       { from: 'app/assets', to: 'dist' },
       { from: 'node_modules/expedition-app/app/images', to: 'dist/images' },
+      { from: { glob: 'node_modules/expedition-art/icons/*.svg' }, flatten: true, to: './dist/images' },
+      { from: { glob: 'node_modules/expedition-art/art/*.png' }, flatten: true, to: './dist/images' },
       { from: 'app/dictionaries', to: 'dist/dictionaries'},
       { from: 'app/scripts', to: 'dist/scripts' },
 
