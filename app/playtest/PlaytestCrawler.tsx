@@ -64,14 +64,14 @@ export class PlaytestCrawler extends StatsCrawler {
       case 'roleplay':
         this.verifyChoiceCount(q.node, line);
         this.verifyInstructionFormat(q.node, line);
-        this.verifyRoleplayIconsAndArt(q.node, line);
+        this.verifyRoleplayArt(q.node, line);
         break;
       default:
         break;
     }
   }
 
-  private verifyRoleplayIconsAndArt(roleplayNode: Node<Context>, line: number) {
+  private verifyRoleplayArt(roleplayNode: Node<Context>, line: number) {
     roleplayNode.loopChildren((tag, child, orig) => {
       const inst = child.text();
       const invalidArt = REGEX.INVALID_ART.exec(inst);
