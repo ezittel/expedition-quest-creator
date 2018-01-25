@@ -5,8 +5,9 @@ import {store} from '../Store'
 import {saveQuest} from './Quest'
 import {renderXML} from 'expedition-qdl/lib/render/QDLParser'
 import {initQuest, loadNode} from 'expedition-app/app/actions/Quest'
-import {defaultContext, ParserNode} from 'expedition-app/app/cardtemplates/Template'
-import {TemplateContext} from 'expedition-app/app/cardtemplates/TemplateTypes'
+import {changeSettings} from 'expedition-app/app/actions/Settings'
+import {defaultContext} from 'expedition-app/app/cardtemplates/Template'
+import {TemplateContext, ParserNode} from 'expedition-app/app/cardtemplates/TemplateTypes'
 import {pushError} from './Dialogs'
 
 export function setDirty(is_dirty: boolean): SetDirtyAction {
@@ -122,7 +123,7 @@ export function renderAndPlay(quest: QuestType, qdl: string, line: number, oldWo
       const newNode = new ParserNode(playNode, ctx);
       dispatch({type: 'REBOOT_APP'});
       // TODO: Make these settings configurable - https://github.com/ExpeditionRPG/expedition-quest-creator/issues/261
-      dispatch(loadNode({
+      dispatch(changeSettings({
         audioEnabled: false,
         autoRoll: false,
         contentSets: {
@@ -135,7 +136,8 @@ export function renderAndPlay(quest: QuestType, qdl: string, line: number, oldWo
         showHelp: false,
         timerSeconds: 10,
         vibration: false,
-      }, newNode));
+      }));
+      dispatch(loadNode(newNode));
       // Results will be shown and added to annotations as they arise.
       dispatch(startPlaytestWorker(oldWorker, questNode, {
         expansionhorror: quest.expansionhorror,
