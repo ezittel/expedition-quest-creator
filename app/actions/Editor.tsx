@@ -66,7 +66,7 @@ export function updateDirtyState(): ((dispatch: Redux.Dispatch<any>)=>any) {
   }
 }
 
-export function getPlayNode(node: Cheerio): Cheerio {
+export function getPlayNode(node: Cheerio): Cheerio|null {
   let tag = node.get(0).tagName;
   if (tag === 'quest') {
     node = node.children().first();
@@ -79,7 +79,7 @@ export function getPlayNode(node: Cheerio): Cheerio {
 }
 
 
-export function startPlaytestWorker(oldWorker: Worker, elem: Cheerio, settings: PlaytestSettings) {
+export function startPlaytestWorker(oldWorker: Worker|null, elem: Cheerio, settings: PlaytestSettings) {
   return (dispatch: Redux.Dispatch<any>): any => {
     if (oldWorker) {
       oldWorker.terminate();
@@ -106,7 +106,7 @@ export function startPlaytestWorker(oldWorker: Worker, elem: Cheerio, settings: 
   }
 }
 
-export function renderAndPlay(quest: QuestType, qdl: string, line: number, oldWorker: Worker, ctx: TemplateContext = defaultContext()) {
+export function renderAndPlay(quest: QuestType, qdl: string, line: number, oldWorker: Worker|null, ctx: TemplateContext = defaultContext()) {
   return (dispatch: Redux.Dispatch<any>): any => {
     // Do rendering after timeout to stay outside the event handler.
     setTimeout(() => {
@@ -140,7 +140,7 @@ export function renderAndPlay(quest: QuestType, qdl: string, line: number, oldWo
       dispatch(loadNode(newNode));
       // Results will be shown and added to annotations as they arise.
       dispatch(startPlaytestWorker(oldWorker, questNode, {
-        expansionhorror: quest.expansionhorror,
+        expansionhorror: Boolean(quest.expansionhorror),
       }));
     });
   };

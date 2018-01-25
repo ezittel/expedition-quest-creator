@@ -93,7 +93,7 @@ export function loadQuestFromURL(user: UserState, id?: string) {
         action: 'QUEST_LOAD_NEW',
       });
     }
-    loadQuest(user, dispatch, id || null);
+    loadQuest(user, dispatch, id);
   }
 }
 
@@ -211,33 +211,37 @@ export function loadQuest(user: UserState, dispatch: any, docid?: string) {
     }
 
     const text: string = md.getText();
-    getPublishedQuestMeta(docid, (quest: QuestType) => {
-      const xmlResult = renderXML(text);
-      quest = Object.assign(quest || {}, {
-        id: docid,
-        mdRealtime: md,
-        notesRealtime: notes,
-        metadataRealtime: metadata,
-        realtimeModel: doc.getModel(),
-        title: xmlResult.getMeta().title,
-        summary: metadata.get('summary'),
-        author: metadata.get('author'),
-        email: metadata.get('email'),
-        minplayers: +metadata.get('minplayers'),
-        maxplayers: +metadata.get('maxplayers'),
-        mintimeminutes: +metadata.get('mintimeminutes'),
-        maxtimeminutes: +metadata.get('maxtimeminutes'),
-        genre: metadata.get('genre'),
-        contentrating: metadata.get('contentrating'),
-        expansionhorror: metadata.get('expansionhorror') || false,
+    if (docid) {
+      getPublishedQuestMeta(docid, (quest: QuestType) => {
+        const xmlResult = renderXML(text);
+        quest = Object.assign(quest || {}, {
+          id: docid,
+          mdRealtime: md,
+          notesRealtime: notes,
+          metadataRealtime: metadata,
+          realtimeModel: doc.getModel(),
+          title: xmlResult.getMeta().title,
+          summary: metadata.get('summary'),
+          author: metadata.get('author'),
+          email: metadata.get('email'),
+          minplayers: +metadata.get('minplayers'),
+          maxplayers: +metadata.get('maxplayers'),
+          mintimeminutes: +metadata.get('mintimeminutes'),
+          maxtimeminutes: +metadata.get('maxtimeminutes'),
+          genre: metadata.get('genre'),
+          contentrating: metadata.get('contentrating'),
+          expansionhorror: metadata.get('expansionhorror') || false,
+        });
+        dispatch(receiveQuestLoad(quest));
+        dispatch({type: 'QUEST_RENDER', qdl: xmlResult, msgs: xmlResult.getFinalizedLogs()});
+        // Kick off a playtest after allowing the main thread to re-paint
+        setTimeout(() => dispatch(startPlaytestWorker(null, xmlResult.getResult(), {
+          expansionhorror: Boolean(quest.expansionhorror),
+        })), 0);
       });
-      dispatch(receiveQuestLoad(quest));
-      dispatch({type: 'QUEST_RENDER', qdl: xmlResult, msgs: xmlResult.getFinalizedLogs()});
-      // Kick off a playtest after allowing the main thread to re-paint
-      setTimeout(() => dispatch(startPlaytestWorker(null, xmlResult.getResult(), {
-        expansionhorror: quest.expansionhorror,
-      })), 0);
-    });
+    } else {
+      console.error('Document ID not given; no quest to load!');
+    }
   },
   (model: any) => {
     const string = model.createString();
@@ -340,6 +344,9 @@ export function saveQuest(quest: QuestType): ((dispatch: Redux.Dispatch<any>)=>a
       description: meta['summary'],
     };
 
+    if (quest.id === undefined) {
+      throw new Error('Undefined quest ID');
+    }
     updateDriveFile(quest.id, fileMeta, text, function(err, result) {
       if (err) {
         ReactGA.event({
